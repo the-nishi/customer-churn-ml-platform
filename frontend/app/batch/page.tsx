@@ -197,7 +197,6 @@ export default function BatchPredictionPage() {
         `${customers.length} customers found. Starting predictions...`
       );
 
-      // Send 20 customers at a time to reduce timeout risk.
       const batches = chunkArray(customers, 20);
 
       let completed = 0;
@@ -302,8 +301,7 @@ export default function BatchPredictionPage() {
           accept=".csv,text/csv"
           disabled={uploading}
           onChange={(e) => {
-            const selectedFile =
-              e.target.files?.[0] ?? null;
+            const selectedFile = e.target.files?.[0] ?? null;
 
             setFile(selectedFile);
             setMessage("");
