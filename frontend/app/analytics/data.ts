@@ -31,7 +31,7 @@ export async function fetchAnalytics(): Promise<AnalyticsSummary | null> {
   const res = await fetch(
     `${url}/rest/v1/prediction_history?select=*&order=created_at.desc&limit=200`,
     {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      headers: { apikey: key },
       cache: "no-store",
     }
   );
