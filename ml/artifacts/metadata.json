@@ -1,0 +1,78 @@
+{
+  "model_name": "logistic_regression",
+  "model_version": "1.0.0",
+  "selected_threshold": 0.55,
+  "training_timestamp": "2026-08-30T19:50:03.730359+00:00",
+  "features": [
+    "tenure",
+    "MonthlyCharges",
+    "TotalCharges",
+    "gender",
+    "SeniorCitizen",
+    "Partner",
+    "Dependents",
+    "PhoneService",
+    "MultipleLines",
+    "InternetService",
+    "OnlineSecurity",
+    "OnlineBackup",
+    "DeviceProtection",
+    "TechSupport",
+    "StreamingTV",
+    "StreamingMovies",
+    "Contract",
+    "PaperlessBilling",
+    "PaymentMethod"
+  ],
+  "test_metrics": {
+    "accuracy": 0.8235,
+    "precision": 0.5714,
+    "recall": 1.0,
+    "f1": 0.7273,
+    "roc_auc": 0.9124,
+    "confusion_matrix": [
+      [
+        30,
+        9
+      ],
+      [
+        0,
+        12
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 1.0,
+        "recall": 0.7692307692307693,
+        "f1-score": 0.8695652173913043,
+        "support": 39.0
+      },
+      "1": {
+        "precision": 0.5714285714285714,
+        "recall": 1.0,
+        "f1-score": 0.7272727272727273,
+        "support": 12.0
+      },
+      "accuracy": 0.8235294117647058,
+      "macro avg": {
+        "precision": 0.7857142857142857,
+        "recall": 0.8846153846153846,
+        "f1-score": 0.7984189723320159,
+        "support": 51.0
+      },
+      "weighted avg": {
+        "precision": 0.8991596638655461,
+        "recall": 0.8235294117647058,
+        "f1-score": 0.8360846314810508,
+        "support": 51.0
+      }
+    },
+    "n_test_samples": 51
+  },
+  "dataset_rows_used": 253,
+  "dataset_provenance": "IBM Telco Customer Churn (github.com/IBM/telco-customer-churn-on-icp4d), 253-row subset retrieved via automated fetch -- see ml/config.py for details",
+  "library_versions": {
+    "python": "3.12.3",
+    "scikit-learn": "1.8.0"
+  }
+}

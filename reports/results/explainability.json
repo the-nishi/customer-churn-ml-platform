@@ -1,0 +1,84 @@
+{
+  "shap_available": false,
+  "global_explanation": {
+    "method": "permutation_importance (ROC-AUC drop)",
+    "top_features": [
+      {
+        "feature": "tenure",
+        "importance": 0.0534
+      },
+      {
+        "feature": "OnlineSecurity",
+        "importance": 0.0165
+      },
+      {
+        "feature": "Dependents",
+        "importance": 0.0149
+      },
+      {
+        "feature": "Contract",
+        "importance": 0.0141
+      },
+      {
+        "feature": "TotalCharges",
+        "importance": 0.0079
+      },
+      {
+        "feature": "PaperlessBilling",
+        "importance": 0.0044
+      },
+      {
+        "feature": "TechSupport",
+        "importance": 0.0036
+      },
+      {
+        "feature": "SeniorCitizen",
+        "importance": 0.0005
+      },
+      {
+        "feature": "PaymentMethod",
+        "importance": -0.0003
+      },
+      {
+        "feature": "StreamingTV",
+        "importance": -0.0005
+      }
+    ]
+  },
+  "sample_local_explanation": {
+    "method": "coefficient_x_value (linear model approximation)",
+    "predicted_churn_probability": 0.0277,
+    "top_factors": [
+      {
+        "feature": "num__tenure",
+        "direction": "decreases_risk",
+        "contribution": -0.7941
+      },
+      {
+        "feature": "num__MonthlyCharges",
+        "direction": "decreases_risk",
+        "contribution": -0.3978
+      },
+      {
+        "feature": "cat__Dependents_Yes",
+        "direction": "decreases_risk",
+        "contribution": -0.2114
+      },
+      {
+        "feature": "cat__PaperlessBilling_No",
+        "direction": "decreases_risk",
+        "contribution": -0.1723
+      },
+      {
+        "feature": "cat__Contract_Two year",
+        "direction": "decreases_risk",
+        "contribution": -0.1587
+      },
+      {
+        "feature": "num__TotalCharges",
+        "direction": "increases_risk",
+        "contribution": 0.1499
+      }
+    ]
+  }
+}
