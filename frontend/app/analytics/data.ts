@@ -35,8 +35,11 @@ export async function fetchAnalytics(): Promise<AnalyticsSummary | null> {
       cache: "no-store",
     }
   );
-  if (!res.ok) return null;
-
+  if (!res.ok) {
+  const errorText = await res.text();
+  console.error("Supabase analytics error:", res.status, errorText);
+  return null;
+}
   const rows = (await res.json()) as PredictionRecord[];
   const total = rows.length;
   const averageProbability =
