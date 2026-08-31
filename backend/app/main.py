@@ -87,3 +87,64 @@ def predict(payload: CustomerFeatures) -> PredictionResponse:
     )
 
     return PredictionResponse(**result)
+    @app.post("/predict-batch")
+def predict_batch(customers: list[CustomerFeatures]):
+    if not prediction_service.is_ready:
+        raise HTTPException(
+            status_code=503,
+            detail="Model is not currently loaded."
+        )
+
+    if not customers:
+        raise HTTPException(
+            status_code=400,
+            detail="No customer data provided."
+        )
+
+    if len(customers) > 500:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum 500 customers allowed per batch."
+        )
+
+    results = []
+
+    for payload in customers:
+        try:
+            features = payload.model_dump(
+                exclude={"customer_reference"}
+            )
+
+            result = prediction_service.predict(features)
+
+            persist_prediction(
+                customer_reference=payload.customer_reference,
+                prediction=result["prediction"],
+                churn_probability=result["probability"],
+                risk_level=result["risk_level"],
+                model_version=result["model_version"],
+            )
+
+            results.append({
+                "customer_reference": payload.customer_reference,
+                "prediction": result["prediction"],
+                "probability": result["probability"],
+                "risk_level": result["risk_level"],
+                "model_version": result["model_version"],
+            })
+
+        except Exception as exc:
+            logger.exception(
+                "Batch prediction failed for customer %s",
+                payload.customer_reference,
+            )
+
+            results.append({
+                "customer_reference": payload.customer_reference,
+                "error": str(exc),
+            })
+
+    return {
+        "total": len(customers),
+        "results": results,
+    }
