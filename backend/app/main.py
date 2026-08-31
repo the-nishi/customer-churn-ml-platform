@@ -24,11 +24,17 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS: restrict to the deployed frontend origin(s) in production via
-# the FRONTEND_ORIGINS env var (comma-separated). Defaults to
-# permissive localhost origins for local development only.
-_origins_env = os.environ.get("FRONTEND_ORIGINS", "http://localhost:3000")
-ALLOWED_ORIGINS = [o.strip() for o in _origins_env.split(",") if o.strip()]
+# CORS configuration
+_origins_env = os.environ.get(
+    "FRONTEND_ORIGINS",
+    "http://localhost:3000"
+)
+
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in _origins_env.split(",")
+    if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,15 +50,24 @@ def health() -> HealthResponse:
     return HealthResponse(
         status="ok" if prediction_service.is_ready else "degraded",
         model_loaded=prediction_service.is_ready,
-        model_version=(prediction_service.metadata or {}).get("model_version") if prediction_service.is_ready else None,
+        model_version=(
+            prediction_service.metadata or {}
+        ).get("model_version")
+        if prediction_service.is_ready
+        else None,
     )
 
 
 @app.get("/model-info", response_model=ModelInfoResponse)
 def model_info() -> ModelInfoResponse:
     if not prediction_service.is_ready:
-        raise HTTPException(status_code=503, detail="Model is not currently loaded.")
+        raise HTTPException(
+            status_code=503,
+            detail="Model is not currently loaded."
+        )
+
     meta = prediction_service.metadata
+
     return ModelInfoResponse(
         model_name=meta["model_name"],
         model_version=meta["model_version"],
@@ -67,16 +82,31 @@ def model_info() -> ModelInfoResponse:
 @app.post("/predict", response_model=PredictionResponse)
 def predict(payload: CustomerFeatures) -> PredictionResponse:
     if not prediction_service.is_ready:
-        raise HTTPException(status_code=503, detail="Model is not currently loaded.")
+        raise HTTPException(
+            status_code=503,
+            detail="Model is not currently loaded."
+        )
 
     try:
-        features = payload.model_dump(exclude={"customer_reference"})
+        features = payload.model_dump(
+            exclude={"customer_reference"}
+        )
+
         result = prediction_service.predict(features)
+
     except KeyError as exc:
-        raise HTTPException(status_code=422, detail=f"Missing required feature: {exc}") from exc
-    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=422,
+            detail=f"Missing required feature: {exc}"
+        ) from exc
+
+    except Exception as exc:
         logger.exception("Prediction failed")
-        raise HTTPException(status_code=500, detail="Prediction failed due to an internal error.") from exc
+
+        raise HTTPException(
+            status_code=500,
+            detail="Prediction failed due to an internal error."
+        ) from exc
 
     persist_prediction(
         customer_reference=payload.customer_reference,
@@ -87,8 +117,12 @@ def predict(payload: CustomerFeatures) -> PredictionResponse:
     )
 
     return PredictionResponse(**result)
-    @app.post("/predict-batch")
-def predict_batch(customers: list[CustomerFeatures]):
+
+
+@app.post("/predict-batch")
+def predict_batch(
+    customers: list[CustomerFeatures]
+):
     if not prediction_service.is_ready:
         raise HTTPException(
             status_code=503,
@@ -110,12 +144,15 @@ def predict_batch(customers: list[CustomerFeatures]):
     results = []
 
     for payload in customers:
+
         try:
             features = payload.model_dump(
                 exclude={"customer_reference"}
             )
 
-            result = prediction_service.predict(features)
+            result = prediction_service.predict(
+                features
+            )
 
             persist_prediction(
                 customer_reference=payload.customer_reference,
@@ -125,26 +162,52 @@ def predict_batch(customers: list[CustomerFeatures]):
                 model_version=result["model_version"],
             )
 
-            results.append({
-                "customer_reference": payload.customer_reference,
-                "prediction": result["prediction"],
-                "probability": result["probability"],
-                "risk_level": result["risk_level"],
-                "model_version": result["model_version"],
-            })
+            results.append(
+                {
+                    "customer_reference":
+                        payload.customer_reference,
+
+                    "prediction":
+                        result["prediction"],
+
+                    "probability":
+                        result["probability"],
+
+                    "risk_level":
+                        result["risk_level"],
+
+                    "model_version":
+                        result["model_version"],
+                }
+            )
 
         except Exception as exc:
+
             logger.exception(
                 "Batch prediction failed for customer %s",
                 payload.customer_reference,
             )
 
-            results.append({
-                "customer_reference": payload.customer_reference,
-                "error": str(exc),
-            })
+            results.append(
+                {
+                    "customer_reference":
+                        payload.customer_reference,
+
+                    "error":
+                        str(exc),
+                }
+            )
+
+    successful = sum(
+        1 for item in results
+        if "error" not in item
+    )
+
+    failed = len(results) - successful
 
     return {
         "total": len(customers),
+        "successful": successful,
+        "failed": failed,
         "results": results,
     }
