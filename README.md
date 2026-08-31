@@ -281,10 +281,10 @@ free-text reference the caller supplies.
 
 ## GitHub Repository
 
-https://github.com/the-nishi/customer-churn-ml-platform *(code has not
-yet been pushed here — see final report)*
+https://github.com/the-nishi/customer-churn-ml-platform *(Source code is maintained in this repository.)*
 
 ## Live Application
 
-Not yet deployed to production traffic in this session — see final
-report for current Vercel/Railway status.
+Frontend deployed on Vercel.
+
+Backend deployment and full end-to-end production integration are in progress.
