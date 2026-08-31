@@ -11,7 +11,7 @@ import pandas as pd
 
 logger = logging.getLogger("churn_api.prediction_service")
 
-ARTIFACT_DIR = Path(__file__).resolve().parents[3] / "ml" / "artifacts"
+ARTIFACT_DIR = Path(__file__).resolve().parents[2] / "artifacts"
 MODEL_PATH = ARTIFACT_DIR / "churn_pipeline.joblib"
 METADATA_PATH = ARTIFACT_DIR / "metadata.json"
 
