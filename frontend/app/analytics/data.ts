@@ -26,7 +26,13 @@ export interface AnalyticsSummary {
 export async function fetchAnalytics(): Promise<AnalyticsSummary | null> {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
+
+  console.error("SUPABASE ENV CHECK:", {
+    hasUrl: Boolean(url),
+    hasKey: Boolean(key),
+  });
+
+if (!url || !key) return null;
 
   const res = await fetch(
     `${url}/rest/v1/prediction_history?select=*&order=created_at.desc&limit=200`,
