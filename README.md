@@ -1,290 +1,768 @@
 # Customer Churn Prediction & Explainable ML Platform
 
-A full-stack, explainable machine learning platform that predicts telecom
-customer churn risk and explains *why* each prediction was made — built on
-the IBM Telco Customer Churn dataset schema.
+A full-stack machine learning web application for predicting telecom customer churn risk, explaining individual predictions, supporting batch customer prediction, and monitoring prediction analytics.
 
-## Overview
+The platform integrates a **Next.js frontend**, **FastAPI backend**, **machine learning prediction pipeline**, **Supabase PostgreSQL database**, **Railway deployment**, and **Vercel deployment**.
 
-Customer acquisition costs materially more than retention. This platform
-gives a retention team an early, explained signal on which customers are
-at risk, and what's driving that risk for each one — not just a black-box
-score.
+---
 
-## Features
+## Live Application
 
-- Leakage-safe scikit-learn preprocessing pipeline (`ColumnTransformer` +
-  `Pipeline`), fit only on training folds
-- Six-model comparison (Logistic Regression, KNN, SVM, Decision Tree,
-  Random Forest, XGBoost*) under stratified 5-fold CV
-- Hyperparameter tuning of the best candidate via `RandomizedSearchCV`
-- Out-of-fold threshold analysis (never tuned against the test set)
-- One-time, untouched test-set evaluation
-- Per-prediction explainability (global + local factors), SHAP-based*
-- FastAPI backend (`/health`, `/model-info`, `/predict`)
-- Supabase-backed prediction history with RLS enabled and no public
-  policies — all access goes through the backend
-- Next.js 14 (App Router, TypeScript, Tailwind) dashboard: Overview,
-  Predict Churn, Analytics, Model Info
+### Frontend
+https://customer-churn-ml-platform.vercel.app
 
-*See **Known Limitations** — this repo's execution environment could not
-install `xgboost`/`shap`; the code paths are shipped and used automatically
-when those libraries are present (e.g. on Railway), with a documented
-sklearn-based fallback otherwise.
+### Predict Customer Churn
+https://customer-churn-ml-platform.vercel.app/predict
+
+### Batch Prediction
+https://customer-churn-ml-platform.vercel.app/batch
+
+### Analytics Dashboard
+https://customer-churn-ml-platform.vercel.app/analytics
+
+### Backend API
+https://backend-production-0837.up.railway.app
+
+### Interactive API Documentation
+https://backend-production-0837.up.railway.app/docs
+
+---
+
+## Project Overview
+
+Customer churn is an important business problem for subscription-based
+organizations because losing existing customers can directly affect
+revenue and long-term customer value.
+
+This project provides an end-to-end churn intelligence platform capable
+of:
+
+- Predicting churn for an individual customer
+- Estimating churn probability
+- Assigning customer risk levels
+- Explaining important factors behind predictions
+- Processing multiple customers through batch prediction
+- Storing prediction history
+- Providing analytics based on historical predictions
+
+The project demonstrates the complete workflow from machine learning
+development to production deployment.
+
+---
+
+## Key Features
+
+- Customer churn prediction using a trained machine learning model
+- Churn probability estimation
+- Low, Medium, and High customer risk classification
+- Explainable prediction factors
+- Single-customer prediction form
+- CSV-based batch prediction
+- Batch processing for large customer lists
+- Prediction history persistence
+- Analytics dashboard
+- Average churn probability monitoring
+- High-risk customer monitoring
+- Risk distribution visualization
+- Recent prediction history
+- Responsive Next.js frontend
+- FastAPI REST backend
+- Supabase PostgreSQL integration
+- Production deployment using Railway and Vercel
+
+---
 
 ## System Architecture
 
 ```mermaid
 flowchart TD
-    U[User] --> V[Vercel: Next.js Frontend]
-    V --> R[Railway: FastAPI Backend]
-    R --> M[ML Prediction Pipeline]
-    M --> S[SHAP Explainability]
-    M --> D[(Supabase PostgreSQL)]
-    V -.server-side only.-> D
+    U[User] --> F[Vercel - Next.js Frontend]
+
+    F --> P[Single Prediction]
+    F --> B[Batch Prediction]
+    F --> A[Analytics Dashboard]
+
+    P --> API[Railway - FastAPI Backend]
+    B --> API
+
+    API --> ML[Machine Learning Pipeline]
+    ML --> XAI[Prediction Explanation]
+
+    API --> DB[(Supabase PostgreSQL)]
+
+    DB --> A
 ```
+
+### Production Flow
+
+```text
+User
+  |
+  v
+Next.js Frontend - Vercel
+  |
+  v
+FastAPI Backend - Railway
+  |
+  v
+Machine Learning Model
+  |
+  +------> Prediction + Risk + Explanation
+  |
+  v
+Supabase PostgreSQL
+  |
+  v
+Analytics Dashboard
+```
+
+---
 
 ## Technology Stack
 
-Python, pandas, scikit-learn, XGBoost, SHAP, imbalanced-learn, FastAPI,
-Pydantic, Next.js, React, TypeScript, Tailwind CSS, Supabase (PostgreSQL),
-Railway, Vercel.
+### Machine Learning
+
+- Python
+- pandas
+- NumPy
+- scikit-learn
+- XGBoost-compatible pipeline
+- SHAP-compatible explainability
+- imbalanced-learn
+- joblib
+
+### Backend
+
+- FastAPI
+- Pydantic
+- Uvicorn
+- Supabase Python Client
+
+### Frontend
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+
+### Database
+
+- Supabase
+- PostgreSQL
+
+### Deployment
+
+- Vercel — Frontend
+- Railway — Backend
+- Supabase — Database
+
+### Version Control
+
+- Git
+- GitHub
+
+---
 
 ## Dataset
 
-**IBM Telco Customer Churn**
-Source: https://github.com/IBM/telco-customer-churn-on-icp4d
-(`data/Telco-Customer-Churn.csv`, 7,043 customers, 21 columns).
+The machine learning pipeline is based on the schema of the
+**IBM Telco Customer Churn Dataset**.
 
-> **Provenance note:** the working file at
-> `data/raw/telco_churn_partial_ibm_source.csv` is a **253-row subset** of
-> the full 7,043-row file, retrieved via automated fetch in an environment
-> whose fetch tool has a fixed response-size ceiling that the full file
-> exceeds. Every number in this repository computed from the data (EDA
-> stats, CV scores, test metrics) is **real and reproducible on that
-> subset** — nothing is fabricated — but should be read as a small-sample
-> proof of concept, not a publication-grade result. Dropping in the full
-> CSV at the same path (identical schema) and re-running
-> `ml/train.py` → `ml/evaluate.py` → `ml/explain.py` immediately produces
-> representative numbers.
+The dataset contains customer information related to:
 
-## EDA Findings (on the 253-row working sample)
+- Demographics
+- Customer tenure
+- Phone services
+- Internet services
+- Online security
+- Online backup
+- Device protection
+- Technical support
+- Streaming services
+- Contract type
+- Billing preferences
+- Payment method
+- Monthly charges
+- Total charges
+- Customer churn
 
-- Churn rate: **24.5%** (62 of 253 customers)
-- Month-to-month contracts churn far more than annual contracts
-  (44.4% vs. 1.9%/1.5%)
-- Fiber optic internet churns more than DSL or no-internet customers
-  (37.6% vs. 20.4% / 3.9%)
-- Electronic check payers churn most among payment methods (44.4%)
+The model does not use customer identifiers as predictive features.
 
-These directions match well-documented patterns in the full public
-dataset, which is a reasonable sanity check on the subset despite its size.
-Figures: `reports/figures/`. Raw findings: `reports/results/eda_findings.json`.
+---
 
-## Preprocessing
+## Input Features
 
-- `customerID` dropped (unique identifier, no predictive signal, risk of
-  memorization)
-- `TotalCharges` coerced from string to numeric (blank for tenure == 0
-  customers), median-imputed
-- `SeniorCitizen` treated as categorical, not numeric magnitude
-- Numeric features standardized; categorical features one-hot encoded
-- All fitting happens inside `Pipeline`/`ColumnTransformer`, scoped to
-  training folds only — no leakage into validation/test
+The production prediction system accepts the following customer features:
 
-## Machine Learning Models & Comparison
-
-Six algorithms compared under 5-fold stratified CV
-(`reports/results/model_comparison.json`):
-
-| Model | CV ROC-AUC (mean ± std) |
+| Feature | Description |
 |---|---|
-| Logistic Regression | **0.844 ± 0.062** |
-| KNN, SVM, Decision Tree, Random Forest, Boosting | see full JSON |
+| tenure | Number of months the customer has stayed |
+| gender | Customer gender |
+| SeniorCitizen | Senior citizen status |
+| Partner | Whether the customer has a partner |
+| Dependents | Whether the customer has dependents |
+| PhoneService | Phone service status |
+| MultipleLines | Multiple phone lines |
+| InternetService | Internet service type |
+| OnlineSecurity | Online security service |
+| OnlineBackup | Online backup service |
+| DeviceProtection | Device protection service |
+| TechSupport | Technical support service |
+| StreamingTV | Streaming TV service |
+| StreamingMovies | Streaming movie service |
+| Contract | Contract type |
+| PaperlessBilling | Paperless billing status |
+| PaymentMethod | Payment method |
+| MonthlyCharges | Monthly customer charge |
+| TotalCharges | Total customer charges |
 
-**Selected model: Logistic Regression** (highest CV ROC-AUC on this
-sample), tuned via `RandomizedSearchCV` (best `C=0.1`, tuned CV ROC-AUC
-0.863).
+An optional `customer_reference` can be supplied to identify prediction
+records without using it as an ML feature.
 
-## Class Imbalance
+---
 
-Handled via `class_weight="balanced"` for all executed models. The
-production code path additionally supports `imbalanced-learn`'s SMOTE
-*inside* the CV pipeline (never applied before the train/test split) when
-`imbalanced-learn` is installed — not exercised in this environment (see
-Known Limitations).
+## Machine Learning Pipeline
+
+The project uses a leakage-safe scikit-learn preprocessing and modeling
+workflow.
+
+Main preprocessing steps include:
+
+- Removing customer identifiers from model features
+- Converting `TotalCharges` to numeric format
+- Handling missing values
+- Treating categorical variables appropriately
+- One-hot encoding categorical variables
+- Scaling numeric variables
+- Performing preprocessing inside the ML pipeline
+
+This helps prevent information leakage between training and evaluation
+data.
+
+---
+
+## Model Development
+
+Multiple machine learning algorithms were considered during model
+development, including:
+
+- Logistic Regression
+- K-Nearest Neighbors
+- Support Vector Machine
+- Decision Tree
+- Random Forest
+- Boosting / XGBoost-compatible modeling
+
+Model selection was performed using stratified cross-validation and
+ROC-AUC-based comparison.
+
+The selected model is stored as a reusable model artifact and loaded by
+the production FastAPI service.
+
+---
 
 ## Decision Threshold
 
-Selected via out-of-fold predictions on **training data only**: the
-threshold maximizing F1 among thresholds with recall ≥ 0.6 (churn misses
-are treated as costlier than a wasted retention outreach). Selected
-threshold: **0.55**. Full grid: `reports/results/threshold_analysis.json`.
+Instead of automatically relying only on the default probability
+threshold, threshold analysis was performed using training-data
+predictions.
 
-## Final Model — Verified Test-Set Metrics
+The objective was to obtain an appropriate balance between identifying
+customers likely to churn and limiting unnecessary retention
+interventions.
 
-Evaluated **once** against the untouched 51-row test split:
+The production model returns:
 
-| Metric | Value |
-|---|---|
-| Accuracy | 0.824 |
-| Precision | 0.571 |
-| Recall | 1.000 |
-| F1 | 0.727 |
-| ROC-AUC | 0.912 |
+- Prediction
+- Churn probability
+- Risk level
+- Explanation factors
+- Model version
 
-⚠️ **Honest caveat:** the test split contains only 12 positive (churn)
-cases. A recall of 1.000 on 12 samples is a small-sample artifact, not
-evidence of a strong general model — re-evaluate on the full dataset
-before treating these numbers as representative. Full report:
-`reports/results/final_test_metrics.json`.
+---
 
 ## Explainable AI
 
-- **Global:** feature importance ranking (SHAP where available, sklearn
-  `permutation_importance` on ROC-AUC drop otherwise — this run used the
-  fallback; see `reports/results/explainability.json`)
-- **Local:** per-customer top contributing factors, signed by direction
-  (increases/decreases risk), surfaced in both the API response and the
-  frontend prediction result screen
-- Explanations are presented as **statistical associations**, never as
-  proven causal relationships, in the UI, API docstrings, and this README
+The application is designed to provide more than a binary churn
+prediction.
 
-## FastAPI Backend
+For individual predictions, the system can expose important factors
+associated with the prediction and whether they increase or decrease
+estimated churn risk.
 
-`GET /health`, `GET /model-info`, `POST /predict` — Pydantic-validated
-request/response schemas, structured exception handling, configurable
-CORS (`FRONTEND_ORIGINS` env var), fail-safe model loading (degrades
-`/health` rather than crashing if the artifact is missing).
+Explainability support includes SHAP-compatible and sklearn-based
+fallback approaches depending on the model/runtime environment.
 
-## Supabase
+Predictions should be interpreted as statistical associations learned
+from historical data rather than causal conclusions.
 
-Project `customer-churn-ml-platform` (ref `jxwgohecmcktbgwqjsim`) —
-**verified live** via the Supabase MCP connector. Table
-`prediction_history` created via migration, **Row Level Security
-enabled with no anon-key policies**: only the backend (service-role key,
-server-side environment variable only) can read/write it. The frontend's
-analytics page reads it through a `server-only`-tagged Next.js module —
-the service-role key never reaches the browser bundle.
+---
 
-## Frontend
+## Single Customer Prediction
 
-Next.js 14 App Router + TypeScript + Tailwind. Pages: Overview, Predict
-Churn (form + result + explanation), Analytics Dashboard (aggregate
-stats + recent predictions from Supabase), Model Information (live
-metrics from `/model-info`).
+Users can enter customer information through the web interface.
 
-## Testing
+The frontend sends the customer information to:
 
-- **ML pipeline tests** (`tests/test_ml_pipeline.py`) — **7/7 passing**,
-  actually executed in this environment (data loading, target encoding,
-  no leaked identifiers, artifact loads and predicts valid probabilities
-  on the full working sample)
-- **Backend API tests** (`backend/tests/test_api.py`) — written using the
-  standard `fastapi.testclient.TestClient` pattern, covering health,
-  model-info, valid prediction, and three validation-failure cases
-  (malformed enum, missing field, out-of-range value). **Not executed in
-  this environment** — see Known Limitations
+```text
+POST /predict
+```
+
+The backend:
+
+1. Validates the request
+2. Preprocesses customer features
+3. Runs ML inference
+4. Calculates churn probability
+5. Determines the risk level
+6. Generates explanation factors
+7. Stores the prediction in Supabase
+8. Returns the result to the frontend
+
+---
+
+## Batch Customer Prediction
+
+The platform supports CSV-based batch prediction.
+
+Users can upload a CSV containing multiple customers through:
+
+```text
+/batch
+```
+
+The frontend validates and transforms the uploaded customer records and
+sends them to the batch API.
+
+Backend endpoint:
+
+```text
+POST /predict-batch
+```
+
+The backend processes each customer, generates predictions, and stores
+successful prediction records in Supabase.
+
+The current backend limits an individual batch API request to a maximum
+of **500 customers**. The frontend can divide uploaded records into
+smaller request chunks for processing.
+
+---
+
+## Required Batch CSV Columns
+
+```text
+customer_reference
+tenure
+gender
+senior_citizen
+partner
+dependents
+phone_service
+multiple_lines
+internet_service
+online_security
+online_backup
+device_protection
+tech_support
+streaming_tv
+streaming_movies
+contract
+paperless_billing
+payment_method
+monthly_charges
+total_charges
+```
+
+The frontend converts the CSV field names into the field aliases expected
+by the backend prediction schema.
+
+---
+
+## Analytics Dashboard
+
+The Analytics Dashboard summarizes stored prediction history from
+Supabase.
+
+It provides:
+
+- Total predictions
+- Average churn probability
+- High-risk customer count
+- Risk distribution
+- Recent predictions
+
+The analytics data loader uses server-side access to Supabase, keeping
+the service-role credential outside the browser.
+
+Prediction records are retrieved in paginated batches so analytics are
+not restricted to only the latest 200 records.
+
+---
+
+## Prediction Database
+
+Prediction history is stored in the Supabase PostgreSQL table:
+
+```text
+prediction_history
+```
+
+Stored information includes:
+
+- Customer reference
+- Prediction
+- Churn probability
+- Risk level
+- Model version
+- Prediction timestamp
+
+The customer reference is used for record identification and is not
+passed to the ML model as a predictive feature.
+
+---
+
+## FastAPI Endpoints
+
+### Health Check
+
+```http
+GET /health
+```
+
+Checks whether the backend and prediction service are operational.
+
+### Model Information
+
+```http
+GET /model-info
+```
+
+Returns information about the currently loaded ML model.
+
+### Single Prediction
+
+```http
+POST /predict
+```
+
+Runs churn prediction for one customer.
+
+### Batch Prediction
+
+```http
+POST /predict-batch
+```
+
+Runs churn predictions for multiple customers.
+
+Interactive API documentation is available at:
+
+https://backend-production-0837.up.railway.app/docs
+
+---
+
+## Frontend Pages
+
+| Page | Route | Purpose |
+|---|---|---|
+| Overview | `/` | Project overview |
+| Predict Churn | `/predict` | Single-customer prediction |
+| Batch Upload | `/batch` | CSV batch prediction |
+| Analytics | `/analytics` | Prediction analytics |
+| Model Info | `/model` | Production model information |
+
+The navigation bar provides access to all major application modules.
+
+---
 
 ## Repository Structure
 
-```
+```text
 customer-churn-ml-platform/
-├── data/raw/                  # working dataset subset (see Provenance)
-├── ml/                        # preprocessing, training, evaluation, explainability
-│   └── artifacts/             # churn_pipeline.joblib + metadata.json
-├── backend/app/                # FastAPI app, schemas, services
-├── frontend/app/                # Next.js pages (App Router)
-├── database/migrations/       # SQL mirrored from applied Supabase migration
-├── reports/{figures,results}/ # EDA plots + JSON result artifacts
-├── tests/                     # ML pipeline tests
+│
+├── backend/
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── schemas.py
+│   │   └── services/
+│   ├── tests/
+│   └── requirements.txt
+│
+├── frontend/
+│   └── app/
+│       ├── analytics/
+│       ├── batch/
+│       ├── model/
+│       ├── predict/
+│       ├── layout.tsx
+│       └── page.tsx
+│
+├── ml/
+│   ├── artifacts/
+│   ├── train.py
+│   ├── evaluate.py
+│   ├── explain.py
+│   └── eda.py
+│
+├── data/
+│   └── raw/
+│
+├── database/
+│   └── migrations/
+│
+├── reports/
+│   ├── figures/
+│   └── results/
+│
+├── tests/
+│
 ├── .env.example
 └── README.md
 ```
 
-## Local Setup
+---
 
-**Backend**
+## Local Development
+
+### Clone Repository
+
+```bash
+git clone https://github.com/the-nishi/customer-churn-ml-platform.git
+cd customer-churn-ml-platform
+```
+
+### Backend
+
 ```bash
 cd backend
 pip install -r requirements.txt
-export SUPABASE_URL=...        # optional, enables prediction history
-export SUPABASE_SERVICE_ROLE_KEY=...
 uvicorn app.main:app --reload --port 8000
 ```
 
-**Frontend**
+Backend development URL:
+
+```text
+http://localhost:8000
+```
+
+API documentation:
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+## Frontend
+
 ```bash
 cd frontend
 npm install
-export NEXT_PUBLIC_API_URL=http://localhost:8000
 npm run dev
 ```
 
-**ML pipeline** (regenerate the artifact, e.g. after swapping in the full
-dataset)
-```bash
-python3 -m ml.eda
-python3 -m ml.train
-python3 -m ml.evaluate
-python3 -m ml.explain
+Frontend development URL:
+
+```text
+http://localhost:3000
 ```
+
+---
 
 ## Environment Variables
 
-See `.env.example`. No real credentials are committed anywhere in this
-repository.
+### Frontend
 
-## Limitations
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
 
-1. **Dataset size**: working sample is 253 of 7,043 real rows (see
-   Provenance note above) — swap in the full file for representative
-   results.
-2. **Execution environment had no internet access**: `xgboost`, `shap`,
-   `imbalanced-learn`, `fastapi`, `uvicorn`, `pydantic`, and `pytest`
-   could not be installed here. The ML training/evaluation/explainability
-   scripts were **actually executed** using automatic sklearn-based
-   fallbacks (`GradientBoostingClassifier` in place of `XGBClassifier`,
-   `class_weight="balanced"` in place of SMOTE, `permutation_importance`
-   in place of SHAP) — clearly logged in `reports/results/*.json` via the
-   `xgboost_available` / `imblearn_available` / `shap_available` fields.
-   The intended-stack code paths are shipped and will be used
-   automatically the moment those packages are installed (e.g. via
-   `pip install -r backend/requirements.txt` on Railway, or locally with
-   network access) — no code changes needed.
-3. **Frontend was not `npm install`/built in this environment** (no
-   registry access) — written correctly against Next.js 14 App Router
-   conventions but not compiled here; verify with `npm run build` before
-   deploying to production traffic.
-4. **Backend API tests were not executed** for the same reason (`fastapi`
-   unavailable) — verify with `pytest` once dependencies are installed.
-5. GitHub push was not performed — no GitHub connector/credentials were
-   available in this session. See the final report for the single
-   remaining manual step.
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+### Backend
+
+```env
+FRONTEND_ORIGINS=http://localhost:3000
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+Never commit production credentials or service-role keys to GitHub.
+
+---
+
+## Deployment Architecture
+
+### Frontend — Vercel
+
+The Next.js frontend is deployed on Vercel.
+
+Production frontend:
+
+https://customer-churn-ml-platform.vercel.app
+
+The Vercel project uses:
+
+```text
+Root Directory: frontend
+```
+
+---
+
+### Backend — Railway
+
+The FastAPI backend is deployed on Railway.
+
+Production backend:
+
+https://backend-production-0837.up.railway.app
+
+Railway configuration:
+
+```text
+Root Directory: backend
+Build Command: pip install -r requirements.txt
+Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+Health Check: /health
+```
+
+---
+
+### Database — Supabase
+
+Supabase PostgreSQL stores production prediction history.
+
+The backend uses server-side credentials to persist prediction results.
+
+The Next.js Analytics server component accesses prediction data
+server-side so sensitive credentials are not exposed to client-side
+JavaScript.
+
+---
+
+## Production Status
+
+The core end-to-end system is operational.
+
+```text
+Single Prediction
+       ↓
+FastAPI ML Inference
+       ↓
+Prediction Result
+       ↓
+Supabase Persistence
+       ↓
+Analytics Dashboard
+```
+
+and:
+
+```text
+CSV Upload
+    ↓
+Batch Prediction
+    ↓
+FastAPI ML Inference
+    ↓
+Supabase Persistence
+    ↓
+Analytics Dashboard
+```
+
+The following production components have been integrated:
+
+- Vercel frontend
+- Railway FastAPI backend
+- ML model inference
+- Single-customer prediction
+- Batch customer prediction
+- Supabase prediction persistence
+- Analytics dashboard
+- Model information endpoint
+- Interactive FastAPI documentation
+
+---
+
+## Security Considerations
+
+- Supabase service-role credentials remain server-side
+- Environment variables are used for secrets
+- Customer reference is excluded from ML features
+- API requests are validated using Pydantic
+- CORS is configurable through environment variables
+- Production credentials are not stored in the repository
+
+---
 
 ## Ethical Considerations
 
-Churn predictions are statistical associations from historical data, not
-guarantees about any individual customer, and are not published as
-causal claims anywhere in the UI or docs. The dataset excludes direct
-identifiers beyond `customerID` (dropped before modeling); no other PII
-is collected or stored in `prediction_history` beyond an optional
-free-text reference the caller supplies.
+Customer churn predictions are probabilistic estimates based on patterns
+learned from historical data.
+
+They should support business decision-making rather than be interpreted
+as guaranteed outcomes or causal conclusions.
+
+Organizations using churn prediction systems should also consider data
+quality, fairness, model drift, customer privacy, and appropriate human
+oversight when making retention decisions.
+
+---
+
+## Current Limitations
+
+- Model performance depends on the quality and representativeness of the
+  training dataset.
+- Prediction explanations represent model associations, not causal
+  relationships.
+- Authentication and role-based access control are not currently
+  implemented for the analytics dashboard.
+- Very large production-scale analytics workloads would benefit from
+  database-side aggregation rather than retrieving all prediction rows.
+- Production ML systems should periodically monitor model drift and
+  retrain the model when appropriate.
+
+---
 
 ## Future Improvements
 
-- Train on the full 7,043-row dataset and refresh all reported metrics
-- Add SHAP force-plot visualizations to the frontend explanation panel
-- Add authentication in front of the analytics dashboard
-- Add a batch-prediction endpoint for CSV upload
-- Wire up CI (GitHub Actions) to run both test suites on every push
+Potential extensions include:
+
+- Authentication and role-based access control
+- Model drift monitoring
+- Automated model retraining
+- CI/CD testing with GitHub Actions
+- Database-side analytics aggregation
+- Advanced SHAP visualizations
+- Customer segmentation
+- Retention recommendation engine
+- Exportable analytics reports
+- Batch job history and downloadable results
+
+---
 
 ## GitHub Repository
 
-https://github.com/the-nishi/customer-churn-ml-platform *(Source code is maintained in this repository.)*
+https://github.com/the-nishi/customer-churn-ml-platform
 
-## Live Application
+---
 
-Frontend deployed on Vercel.
+## Project Status
 
-Backend deployment and full end-to-end production integration are in progress.
+**Production-deployed and operational.**
+
+The application currently supports end-to-end single prediction, batch
+prediction, prediction persistence, explainability, and analytics through
+a deployed full-stack ML architecture.
+
+---
+
+## Disclaimer
+
+This project is intended for machine learning demonstration, research,
+education, and portfolio purposes.
+
+Predictions represent statistical estimates and should not be treated as
+guaranteed customer outcomes.
