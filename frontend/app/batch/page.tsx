@@ -25,27 +25,27 @@ const REQUIRED_COLUMNS = [
   "total_charges",
 ];
 
-type CustomerRow = {
+type BackendCustomer = {
   customer_reference: string;
   tenure: number;
   gender: string;
-  senior_citizen: string;
-  partner: string;
-  dependents: string;
-  phone_service: string;
-  multiple_lines: string;
-  internet_service: string;
-  online_security: string;
-  online_backup: string;
-  device_protection: string;
-  tech_support: string;
-  streaming_tv: string;
-  streaming_movies: string;
-  contract: string;
-  paperless_billing: string;
-  payment_method: string;
-  monthly_charges: number;
-  total_charges: number;
+  SeniorCitizen: string;
+  Partner: string;
+  Dependents: string;
+  PhoneService: string;
+  MultipleLines: string;
+  InternetService: string;
+  OnlineSecurity: string;
+  OnlineBackup: string;
+  DeviceProtection: string;
+  TechSupport: string;
+  StreamingTV: string;
+  StreamingMovies: string;
+  Contract: string;
+  PaperlessBilling: string;
+  PaymentMethod: string;
+  MonthlyCharges: number;
+  TotalCharges: number;
 };
 
 function parseCSVLine(line: string): string[] {
@@ -132,58 +132,62 @@ export default function BatchPredictionPage() {
         );
       }
 
-      const customers: CustomerRow[] = lines.slice(1).map((line, index) => {
-        const values = parseCSVLine(line);
+      const customers: BackendCustomer[] = lines
+        .slice(1)
+        .map((line, index) => {
+          const values = parseCSVLine(line);
 
-        if (values.length !== headers.length) {
-          throw new Error(
-            `Invalid CSV format at data row ${index + 2}.`
-          );
-        }
+          if (values.length !== headers.length) {
+            throw new Error(
+              `Invalid CSV format at data row ${index + 2}.`
+            );
+          }
 
-        const row: Record<string, string> = {};
+          const row: Record<string, string> = {};
 
-        headers.forEach((header, i) => {
-          row[header] = values[i];
+          headers.forEach((header, i) => {
+            row[header] = values[i];
+          });
+
+          const tenure = Number(row.tenure);
+          const monthlyCharges = Number(row.monthly_charges);
+          const totalCharges = Number(row.total_charges);
+
+          if (
+            Number.isNaN(tenure) ||
+            Number.isNaN(monthlyCharges) ||
+            Number.isNaN(totalCharges)
+          ) {
+            throw new Error(
+              `Invalid numeric value at data row ${index + 2}.`
+            );
+          }
+
+          return {
+            customer_reference: row.customer_reference,
+            tenure: tenure,
+            gender: row.gender,
+
+            SeniorCitizen: row.senior_citizen,
+            Partner: row.partner,
+            Dependents: row.dependents,
+            PhoneService: row.phone_service,
+            MultipleLines: row.multiple_lines,
+            InternetService: row.internet_service,
+            OnlineSecurity: row.online_security,
+            OnlineBackup: row.online_backup,
+            DeviceProtection: row.device_protection,
+            TechSupport: row.tech_support,
+            StreamingTV: row.streaming_tv,
+            StreamingMovies: row.streaming_movies,
+            Contract: row.contract,
+            PaperlessBilling: row.paperless_billing,
+            PaymentMethod: row.payment_method,
+
+            MonthlyCharges: monthlyCharges,
+            TotalCharges: totalCharges,
+          };
         });
-
-        const tenure = Number(row.tenure);
-        const monthlyCharges = Number(row.monthly_charges);
-        const totalCharges = Number(row.total_charges);
-
-        if (
-          Number.isNaN(tenure) ||
-          Number.isNaN(monthlyCharges) ||
-          Number.isNaN(totalCharges)
-        ) {
-          throw new Error(
-            `Invalid numeric value at data row ${index + 2}.`
-          );
-        }
-
-        return {
-          customer_reference: row.customer_reference,
-          tenure,
-          gender: row.gender,
-          senior_citizen: row.senior_citizen,
-          partner: row.partner,
-          dependents: row.dependents,
-          phone_service: row.phone_service,
-          multiple_lines: row.multiple_lines,
-          internet_service: row.internet_service,
-          online_security: row.online_security,
-          online_backup: row.online_backup,
-          device_protection: row.device_protection,
-          tech_support: row.tech_support,
-          streaming_tv: row.streaming_tv,
-          streaming_movies: row.streaming_movies,
-          contract: row.contract,
-          paperless_billing: row.paperless_billing,
-          payment_method: row.payment_method,
-          monthly_charges: monthlyCharges,
-          total_charges: totalCharges,
-        };
-      });
 
       if (customers.length === 0) {
         throw new Error("No customer records found.");
@@ -226,15 +230,13 @@ export default function BatchPredictionPage() {
         const data = await response.json();
 
         if (Array.isArray(data.results)) {
-          data.results.forEach(
-            (result: { error?: string }) => {
-              if (result.error) {
-                errorCount++;
-              } else {
-                successCount++;
-              }
+          data.results.forEach((result: { error?: string }) => {
+            if (result.error) {
+              errorCount++;
+            } else {
+              successCount++;
             }
-          );
+          });
         } else {
           successCount += batch.length;
         }
